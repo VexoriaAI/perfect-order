@@ -2,11 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Simulador.App.Data;
 using Simulador.App.Data.Seed;
 using Simulador.App.Modules.Catalog.Endpoints;
-using Simulador.App.Modules.Customers.Endpoints;
-using Simulador.App.Modules.Vehicles.Endpoints;
 using Simulador.App.Modules.Config.Endpoints;
-using Simulador.App.Modules.Simulations.Endpoints;
+using Simulador.App.Modules.Customers.Endpoints;
 using Simulador.App.Modules.Simulations;
+using Simulador.App.Modules.Simulations.Endpoints;
+using Simulador.App.Modules.Vehicles.Endpoints;
+using Simulador.App.Shared;
 using Simulador.Engine.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,16 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped<SimulationOrchestrator>();
 builder.Services.AddSingleton<SimulationEngine>();
 
+builder.Services.AddScoped<Simulador.App.Shared.AppState>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage>();
+
+builder.Services.AddScoped<AppState>();
+
+builder.Services.AddHttpClient<ApiClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["App:BaseUrl"] ?? "http://localhost:5294/");
+});
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -35,6 +46,8 @@ app.UseSwaggerUI();
 //app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapCatalogEndpoints();

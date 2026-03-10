@@ -1,5 +1,46 @@
-﻿<h3>Login</h3>
+﻿@page "/login"
+@rendermode InteractiveServer
+@using Simulador.App.Shared
+@inject AppState State
+@inject NavigationManager Nav
+
+<h3>Login (MVP)</h3>
+
+<div class="card p-3" style="max-width:480px;">
+    <div class="mb-2">
+        <label class="form-label">Nome (opcional)</label>
+        <input class="form-control" @bind="name" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Perfil</label>
+        <select class="form-select" @bind="role">
+            <option value="@AppRole.Vendedor">Vendedor</option>
+            <option value="@AppRole.Admin">Admin</option>
+        </select>
+    </div>
+
+    <button type="button" class="btn btn-primary" @onclick="DoLogin">Entrar</button>
+</div>
 
 @code {
+    private string? name;
+    private AppRole role = AppRole.Vendedor;
+    private bool _loaded;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_loaded)
+        {
+            _loaded = true;
+            await State.LoadAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task DoLogin()
+    {
+        await State.LoginAsync(role, name);
+        Nav.NavigateTo("/simulator", true);
+    }
 }

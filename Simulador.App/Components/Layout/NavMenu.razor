@@ -1,6 +1,6 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Simulador.App</a>
+        <a class="navbar-brand" href="">Simulador</a>
     </div>
 </div>
 
@@ -8,23 +8,33 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
+
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            <NavLink class="nav-link" href="login" Match="NavLinkMatch.All">
+                <span class="bi bi-person-circle" aria-hidden="true"></span> Login
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="simulator">
+                <span class="bi bi-calculator" aria-hidden="true"></span> Simulador
+            </NavLink>
+        </div>
+
+        @* Deixa comentado por enquanto *@
+        @*
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="history">
+                <span class="bi bi-clock-history" aria-hidden="true"></span> Histórico
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="nav-link" href="admin/customers">
+                <span class="bi bi-gear" aria-hidden="true"></span> Admin - Clientes
             </NavLink>
         </div>
+        *@
+
     </nav>
 </div>
-

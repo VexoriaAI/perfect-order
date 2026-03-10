@@ -52,8 +52,8 @@ public sealed class VehicleRecommender
                 return new VehicleResult
                 {
                     Recommended = chosen.Name,
-                    Reason = "Meets capacity, but NOT allowed by customer (restriction violated)",
-                    CapacityWarning = "No allowed vehicle fits; showing closest capacity match"
+                    Reason = "Atende à capacidade, mas NÃO é permitido pelo cliente (restrição violada)",
+                    CapacityWarning = "Nenhum veículo permitido atende, exibindo a correspondência de capacidade mais próxima"
                 };
             }
         }
@@ -64,7 +64,7 @@ public sealed class VehicleRecommender
             return new VehicleResult
             {
                 Recommended = null,
-                Reason = "No vehicle fits capacity",
+                Reason = "Nenhum veículo atende à capacidade",
                 CapacityWarning = isPalletized
                     ? "Palete e Peso Acima da Capacidade"
                     : "Peso e Cubagem Acima da Capacidade"
@@ -75,8 +75,8 @@ public sealed class VehicleRecommender
         {
             Recommended = chosen.Name,
             Reason = allowedVehicles.Count > 0
-                ? "Meets capacity and is allowed by customer"
-                : "Meets capacity"
+                ? "Atende à capacidade e é permitido pelo cliente"
+                : "Atende à capacidade"
         };
     }
 

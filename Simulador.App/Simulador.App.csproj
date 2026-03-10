@@ -18,20 +18,9 @@
 
   <ItemGroup>
     <Folder Include="Data\Migrations\" />
+    <Folder Include="Migrations\" />
     <Folder Include="Modules\Config\Dtos\" />
-    <Folder Include="Modules\Config\Endpoints\" />
-    <Folder Include="Modules\Config\Entities\" />
-    <Folder Include="Modules\Simulations\Dtos\" />
-    <Folder Include="Modules\Simulations\Endpoints\" />
-    <Folder Include="Modules\Simulations\Entities\" />
     <Folder Include="Modules\Vehicles\Dtos\" />
-    <Folder Include="Modules\Vehicles\Endpoints\" />
-    <Folder Include="Modules\Vehicles\Entities\" />
-    <Folder Include="Modules\Customers\Dtos\" />
-    <Folder Include="Modules\Customers\Endpoints\" />
-    <Folder Include="Modules\Customers\Entities\" />
-    <Folder Include="Modules\Catalog\Entities\" />
-    <Folder Include="Modules\Catalog\Endpoints\" />
     <Folder Include="Modules\Catalog\Dtos\" />
   </ItemGroup>
 

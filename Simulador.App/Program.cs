@@ -1,27 +1,58 @@
-using Simulador.App.Components;
+using Microsoft.EntityFrameworkCore;
+using Simulador.App.Data;
+using Simulador.App.Data.Seed;
+using Simulador.App.Modules.Catalog.Endpoints;
+using Simulador.App.Modules.Customers.Endpoints;
+using Simulador.App.Modules.Vehicles.Endpoints;
+using Simulador.App.Modules.Config.Endpoints;
+using Simulador.App.Modules.Simulations.Endpoints;
+using Simulador.App.Modules.Simulations;
+using Simulador.Engine.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Blazor
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// EF Core
+builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+// Orchestrator + Engine
+builder.Services.AddScoped<SimulationOrchestrator>();
+builder.Services.AddSingleton<SimulationEngine>();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
+
+//app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapCatalogEndpoints();
+app.MapCustomersEndpoints();
+app.MapVehiclesEndpoints();
+app.MapConfigEndpoints();
+app.MapSimulationEndpoints();
+
+// Blazor
+app.MapRazorComponents<Simulador.App.Components.App>()
+   .AddInteractiveServerRenderMode();
+
+// Auto-migrate + seed (DEV)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+    await Seeder.SeedAsync(db);
+}
 
 app.Run();

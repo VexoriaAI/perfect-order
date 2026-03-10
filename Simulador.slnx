@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Simulador.App/Simulador.App.csproj" />
+  <Project Path="Simulador.Engine/Simulador.Engine.csproj" />
+  <Project Path="Simulador.Tests/Simulador.Tests.csproj" />
+</Solution>

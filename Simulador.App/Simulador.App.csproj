@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Simulador.Engine\Simulador.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Migrations\" />
+    <Folder Include="Modules\Config\Dtos\" />
+    <Folder Include="Modules\Config\Endpoints\" />
+    <Folder Include="Modules\Config\Entities\" />
+    <Folder Include="Modules\Simulations\Dtos\" />
+    <Folder Include="Modules\Simulations\Endpoints\" />
+    <Folder Include="Modules\Simulations\Entities\" />
+    <Folder Include="Modules\Vehicles\Dtos\" />
+    <Folder Include="Modules\Vehicles\Endpoints\" />
+    <Folder Include="Modules\Vehicles\Entities\" />
+    <Folder Include="Modules\Customers\Dtos\" />
+    <Folder Include="Modules\Customers\Endpoints\" />
+    <Folder Include="Modules\Customers\Entities\" />
+    <Folder Include="Modules\Catalog\Entities\" />
+    <Folder Include="Modules\Catalog\Endpoints\" />
+    <Folder Include="Modules\Catalog\Dtos\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+</Project>

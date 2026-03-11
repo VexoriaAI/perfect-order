@@ -9,6 +9,7 @@ using Simulador.App.Modules.Customers.Endpoints;
 using Simulador.App.Modules.Simulations;
 using Simulador.App.Modules.Simulations.Endpoints;
 using Simulador.App.Modules.Vehicles.Endpoints;
+using Simulador.App.Shared;
 using Simulador.Engine.Services;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -22,13 +22,8 @@ public sealed class VehicleRecommender
 
         foreach (var v in candidates)
         {
+            // effectiveVolumeM3 já vem com perda aplicada pelo Engine
             var ok = isPalletized
-                ? (weightKg <= v.MaxWeightKg && pallets <= v.MaxPallets)
-                : (weightKg <= v.MaxWeightKg && effectiveVolumeM3 <= v.MaxVolumeM3 * 0.85m); // NOTA: não usar isso aqui
-
-            // IMPORTANTE:
-            // Aqui não aplicar 0.85 fixo. O effectiveVolumeM3 já vem com perda aplicada.
-            ok = isPalletized
                 ? (weightKg <= v.MaxWeightKg && pallets <= v.MaxPallets)
                 : (weightKg <= v.MaxWeightKg && effectiveVolumeM3 <= v.MaxVolumeM3);
 

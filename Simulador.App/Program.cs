@@ -9,7 +9,6 @@ using Simulador.App.Modules.Customers.Endpoints;
 using Simulador.App.Modules.Simulations;
 using Simulador.App.Modules.Simulations.Endpoints;
 using Simulador.App.Modules.Vehicles.Endpoints;
-using Simulador.App.Shared;
 using Simulador.Engine.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,20 +57,17 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(Roles.Admin));
 });
 
-// seus serviços atuais
-builder.Services.AddScoped<ApiClient>();
+// Orchestrator + Engine
 builder.Services.AddScoped<SimulationOrchestrator>();
+builder.Services.AddSingleton<SimulationEngine>();
 
-// Engine
-builder.Services.AddScoped<SimulationEngine>();
-builder.Services.AddScoped<PalletCalculator>();
-builder.Services.AddScoped<VehicleRecommender>();
-builder.Services.AddScoped<FreightEstimator>();
-
-// se já tiver HttpClient registrado, deixa
-builder.Services.AddHttpClient<ApiClient>(client =>
+// HttpClient para ApiClient (propaga cookies de auth)
+builder.Services.AddHttpClient<ApiClient>((sp, client) =>
 {
     client.BaseAddress = new Uri(builder.Configuration["App:BaseUrl"] ?? "http://localhost:5294/");
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    UseCookies = false // não usar cookie container próprio; propagamos manualmente
 });
 
 var app = builder.Build();
@@ -109,6 +105,7 @@ using (var scope = app.Services.CreateScope())
 
     await db.Database.MigrateAsync();
 
+    await Seeder.SeedAsync(db);
     await RoleSeeder.SeedAsync(scope.ServiceProvider);
     await AdminSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
 }

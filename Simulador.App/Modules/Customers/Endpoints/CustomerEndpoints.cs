@@ -9,7 +9,8 @@ public static class CustomerEndpoints
 {
     public static IEndpointRouteBuilder MapCustomersEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/customers").WithTags("Customers");
+        var group = app.MapGroup("/api/customers").WithTags("Customers")
+            .RequireAuthorization();
 
         group.MapGet("/", async (AppDbContext db) =>
         {

@@ -1,4 +1,7 @@
-﻿<h3>Customers</h3>
+﻿@attribute [Authorize(Roles = "Admin")]
+@using Microsoft.AspNetCore.Authorization
+
+<h3>Customers</h3>
 
 @code {
 

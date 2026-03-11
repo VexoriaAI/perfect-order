@@ -1,6 +1,8 @@
-﻿namespace Simulador.App.Auth
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace Simulador.App.Auth;
+
+public sealed class ApplicationUser : IdentityUser
 {
-    public class ApplicationUser
-    {
-    }
+    public string FullName { get; set; } = string.Empty;
 }

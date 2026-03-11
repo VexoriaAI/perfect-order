@@ -1,10 +1,20 @@
 ﻿@page "/simulator"
+@attribute [Authorize]
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
+@using Simulador.App.Auth
 @using Simulador.App.Shared
 @using Simulador.Engine.Contracts
+
 @rendermode InteractiveServer
-@inject AppState State
+
+@inject AuthenticationStateProvider AuthStateProvider
 @inject ApiClient Api
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <h3>Simulador</h3>
 
@@ -12,20 +22,25 @@
 {
     <div class="alert alert-info">Carregando...</div>
 }
-else if (!State.IsLoggedIn)
-{
-    <div class="alert alert-warning">
-        Você precisa fazer login. <a href="/login">Ir para Login</a>
-    </div>
-}
 else
 {
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
-            <strong>@(State.DisplayName ?? "Usuário")</strong> —
-            Perfil: <span class="badge bg-secondary">@State.Role</span>
+            <strong>@(displayName ?? "Usuário")</strong> —
+            Perfil:
+            @if (isAdmin)
+            {
+                <span class="badge bg-danger">Admin</span>
+            }
+            else if (isSeller)
+            {
+                <span class="badge bg-secondary">Vendedor</span>
+            }
         </div>
-        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="Logout">Sair</button>
+
+        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="Logout">
+            Sair
+        </button>
     </div>
 
     <div class="row g-3">
@@ -165,6 +180,11 @@ else
 
 @code {
     private bool _loaded;
+    private bool isBusy;
+    private string? error;
+    private string? displayName;
+    private bool isAdmin;
+    private bool isSeller;
 
     private List<CustomerMini> customers = new();
     private SimulationRequest request = new()
@@ -172,31 +192,31 @@ else
         ShipmentType = "Dedicated",
         Loss = new LossSettings { Mode = "Simple" },
         Freight = new FreightSettings(),
-        Items = new List<SimulationItemRequest> { new() { Sku = "SKU001", Quantity = 1, UnitPrice = 1.0m } }
+        Items = new List<SimulationItemRequest>
+        {
+            new() { Sku = "SKU001", Quantity = 1, UnitPrice = 1.0m }
+        }
     };
 
     private decimal lossPercentUi = 0.10m;
     private decimal idealFreightUi = 0.06m;
     private decimal acceptableFreightUi = 0.08m;
-
-    private bool isBusy;
-    private string? error;
     private SimulationResult? result;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (!firstRender || _loaded) return;
-        _loaded = true;
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
 
-        await State.LoadAsync(); // JS interop OK aqui
+        displayName =
+            user.FindFirst(ClaimTypes.GivenName)?.Value ??
+            user.FindFirst(ClaimTypes.Name)?.Value ??
+            user.Identity?.Name;
 
-        if (!State.IsLoggedIn)
-        {
-            Nav.NavigateTo("/login", true);
-            return;
-        }
+        isAdmin = user.IsInRole(Roles.Admin);
+        isSeller = user.IsInRole(Roles.Vendedor);
 
-        request.IsSeller = State.IsSeller;
+        request.IsSeller = isSeller && !isAdmin;
 
         customers = await Api.GetCustomersAsync();
 
@@ -208,37 +228,29 @@ else
             acceptableFreightUi = cfg.FreightAcceptablePercent;
         }
 
-        StateHasChanged();
+        _loaded = true;
     }
 
     private void AddItem()
-        => request.Items.Add(new SimulationItemRequest { Sku = "", Quantity = 1, UnitPrice = State.IsSeller ? 1.0m : null });
+        => request.Items.Add(new SimulationItemRequest());
 
     private void RemoveItem(SimulationItemRequest item)
-    {
-        request.Items.Remove(item);
-    }
+        => request.Items.Remove(item);
 
     private async Task RunSimulation()
     {
+        isBusy = true;
         error = null;
         result = null;
-        isBusy = true;
 
         try
         {
-            request.Loss.LossPercent = request.IsPalletized ? null : lossPercentUi;
+            request.Loss.LossPercent = request.IsPalletized ? 0 : lossPercentUi;
             request.Freight.IdealPercent = idealFreightUi;
             request.Freight.AcceptablePercent = acceptableFreightUi;
 
-            if (request.IsSeller)
-            {
-                foreach (var i in request.Items)
-                    if (i.UnitPrice is null) i.UnitPrice = 0m;
-            }
-
-            var apiRes = await Api.SimulateAsync(request);
-            result = apiRes?.Result;
+            var response = await Api.SimulateAsync(request);
+            result = response?.Result;
         }
         catch (Exception ex)
         {
@@ -252,7 +264,7 @@ else
 
     private async Task Logout()
     {
-        await State.LogoutAsync();
+        await JS.InvokeVoidAsync("simuladorAuth.logout");
         Nav.NavigateTo("/login", true);
     }
 }

@@ -1,46 +1,91 @@
 ﻿@page "/login"
+@attribute [AllowAnonymous]
 @rendermode InteractiveServer
-@using Simulador.App.Shared
-@inject AppState State
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.JSInterop
+
+@inject IJSRuntime JS
 @inject NavigationManager Nav
 
-<h3>Login (MVP)</h3>
+<h3>Login</h3>
 
-<div class="card p-3" style="max-width:480px;">
-    <div class="mb-2">
-        <label class="form-label">Nome (opcional)</label>
-        <input class="form-control" @bind="name" />
+<EditForm Model="model" OnValidSubmit="DoLogin" FormName="login-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="card p-3" style="max-width:480px;">
+        <div class="mb-2">
+            <label class="form-label">E-mail</label>
+            <InputText class="form-control" @bind-Value="model.Email" />
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Senha</label>
+            <InputText class="form-control" type="password" @bind-Value="model.Password" />
+        </div>
+
+        <div class="form-check mb-3">
+            <InputCheckbox class="form-check-input" @bind-Value="model.RememberMe" />
+            <label class="form-check-label">Lembrar login</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" disabled="@isBusy">
+            @(isBusy ? "Entrando..." : "Entrar")
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger mt-3">@error</div>
+        }
     </div>
-
-    <div class="mb-3">
-        <label class="form-label">Perfil</label>
-        <select class="form-select" @bind="role">
-            <option value="@AppRole.Vendedor">Vendedor</option>
-            <option value="@AppRole.Admin">Admin</option>
-        </select>
-    </div>
-
-    <button type="button" class="btn btn-primary" @onclick="DoLogin">Entrar</button>
-</div>
+</EditForm>
 
 @code {
-    private string? name;
-    private AppRole role = AppRole.Vendedor;
-    private bool _loaded;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !_loaded)
-        {
-            _loaded = true;
-            await State.LoadAsync();
-            StateHasChanged();
-        }
-    }
+    private readonly LoginVm model = new();
+    private bool isBusy;
+    private string? error;
 
     private async Task DoLogin()
     {
-        await State.LoginAsync(role, name);
-        Nav.NavigateTo("/simulator", true);
+        error = null;
+        isBusy = true;
+
+        try
+        {
+            await JS.InvokeAsync<object>("simuladorAuth.login", new
+            {
+                email = model.Email,
+                password = model.Password,
+                rememberMe = model.RememberMe
+            });
+
+            Nav.NavigateTo("/simulator", forceLoad: true);
+        }
+        catch (JSException ex)
+        {
+            error = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private sealed class LoginVm
+    {
+        [Required(ErrorMessage = "Informe o e-mail.")]
+        [EmailAddress(ErrorMessage = "E-mail inválido.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Informe a senha.")]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
     }
 }

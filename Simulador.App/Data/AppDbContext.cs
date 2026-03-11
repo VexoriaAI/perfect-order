@@ -1,13 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Simulador.App.Auth;
 using Simulador.App.Modules.Catalog.Entities;
-using Simulador.App.Modules.Customers.Entities;
-using Simulador.App.Modules.Vehicles.Entities;
 using Simulador.App.Modules.Config.Entities;
+using Simulador.App.Modules.Customers.Entities;
 using Simulador.App.Modules.Simulations.Entities;
+using Simulador.App.Modules.Vehicles.Entities;
 
 namespace Simulador.App.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -27,6 +30,13 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ApplicationUser>(b =>
+        {
+            b.Property(x => x.FullName).HasMaxLength(150);
+        });
+
         // Products
         modelBuilder.Entity<Product>()
             .HasIndex(x => x.Sku)
@@ -59,7 +69,7 @@ public class AppDbContext : DbContext
             .HasIndex(x => x.Name)
             .IsUnique();
 
-        // Config (single row)
+        // Config
         modelBuilder.Entity<SystemConfig>()
             .HasIndex(x => x.Key)
             .IsUnique();

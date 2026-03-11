@@ -6,21 +6,40 @@ namespace Simulador.App.Shared;
 public sealed class ApiClient
 {
     private readonly HttpClient _http;
+    private readonly IHttpContextAccessor _ctx;
 
-    public ApiClient(HttpClient http) => _http = http;
+    public ApiClient(HttpClient http, IHttpContextAccessor ctx)
+    {
+        _http = http;
+        _ctx = ctx;
+    }
+
+    private void PropagateAuth()
+    {
+        var cookieHeader = _ctx.HttpContext?.Request.Headers.Cookie.ToString();
+        if (!string.IsNullOrWhiteSpace(cookieHeader))
+        {
+            _http.DefaultRequestHeaders.Remove("Cookie");
+            _http.DefaultRequestHeaders.Add("Cookie", cookieHeader);
+        }
+    }
 
     public async Task<List<CustomerMini>> GetCustomersAsync()
     {
-        // seu endpoint atual retorna DTO ou Customer entity; ideal: retornar CustomerDto (sem ciclo)
+        PropagateAuth();
         var res = await _http.GetFromJsonAsync<List<CustomerMini>>("/api/customers");
         return res ?? new();
     }
 
     public async Task<SystemConfigDto?> GetConfigAsync()
-        => await _http.GetFromJsonAsync<SystemConfigDto>("/api/config");
+    {
+        PropagateAuth();
+        return await _http.GetFromJsonAsync<SystemConfigDto>("/api/config");
+    }
 
     public async Task<SimulationApiResponse?> SimulateAsync(SimulationRequest req)
     {
+        PropagateAuth();
         var resp = await _http.PostAsJsonAsync("/api/simulations", req);
         if (!resp.IsSuccessStatusCode)
         {

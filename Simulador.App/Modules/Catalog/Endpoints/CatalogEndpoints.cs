@@ -8,7 +8,8 @@ public static class CatalogEndpoints
 {
     public static IEndpointRouteBuilder MapCatalogEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/products").WithTags("Products");
+        var group = app.MapGroup("/api/products").WithTags("Products")
+            .RequireAuthorization();
 
         group.MapGet("/", async (AppDbContext db) =>
             await db.Products.AsNoTracking().OrderBy(p => p.Sku).ToListAsync());
@@ -22,7 +23,8 @@ public static class CatalogEndpoints
         });
 
         // SKU rules
-        var skuGroup = app.MapGroup("/api/sku-rules").WithTags("SkuRules");
+        var skuGroup = app.MapGroup("/api/sku-rules").WithTags("SkuRules")
+            .RequireAuthorization();
 
         skuGroup.MapGet("/", async (AppDbContext db) =>
             await db.SkuRules.AsNoTracking().OrderBy(x => x.Sku).ToListAsync());

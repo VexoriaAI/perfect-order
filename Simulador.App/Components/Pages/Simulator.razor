@@ -245,7 +245,7 @@ else
 
         try
         {
-            request.Loss.LossPercent = request.IsPalletized ? 0 : lossPercentUi;
+            request.Loss.LossPercent = request.IsPalletized ? null : lossPercentUi;
             request.Freight.IdealPercent = idealFreightUi;
             request.Freight.AcceptablePercent = acceptableFreightUi;
 

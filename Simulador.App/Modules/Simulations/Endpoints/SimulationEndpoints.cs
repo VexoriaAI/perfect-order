@@ -10,7 +10,8 @@ public static class SimulationEndpoints
     public static IEndpointRouteBuilder MapSimulationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/simulations")
-            .WithTags("Simulations");
+            .WithTags("Simulations")
+            .RequireAuthorization();
 
         group.MapPost("/", async (SimulationRequest req, SimulationOrchestrator orchestrator) =>
         {

@@ -8,7 +8,8 @@ public static class VehicleEndpoints
 {
     public static IEndpointRouteBuilder MapVehiclesEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/vehicles").WithTags("Vehicles");
+        var group = app.MapGroup("/api/vehicles").WithTags("Vehicles")
+            .RequireAuthorization();
 
         group.MapGet("/", async (AppDbContext db) =>
             await db.Vehicles.AsNoTracking().OrderBy(v => v.OrderIndex).ToListAsync());

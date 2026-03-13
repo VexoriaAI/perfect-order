@@ -50,7 +50,8 @@ public sealed class SimulationOrchestrator
                 VolumeM3 = p.VolumeM3,
                 PalletUnitsDefault = p.PalletUnitsDefault,
                 PackagingType = p.PackagingType,
-                IsActive = p.IsActive
+                IsActive = p.IsActive,
+                DefaultUnitPrice = p.DefaultUnitPrice
             },
             StringComparer.OrdinalIgnoreCase);
 

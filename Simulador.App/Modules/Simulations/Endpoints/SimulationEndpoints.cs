@@ -25,9 +25,6 @@ public static class SimulationEndpoints
 
                 if (i.Quantity <= 0)
                     return Results.BadRequest(new { error = $"Quantity must be > 0 (sku={i.Sku})" });
-
-                if (req.IsSeller && i.UnitPrice is null)
-                    return Results.BadRequest(new { error = $"UnitPrice required for seller (sku={i.Sku})" });
             }
 
             try

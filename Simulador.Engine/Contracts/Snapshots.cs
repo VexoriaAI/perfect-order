@@ -10,6 +10,7 @@ public sealed class ProductSnapshot
     public int PalletUnitsDefault { get; init; }
     public string? PackagingType { get; init; }
     public bool IsActive { get; init; }
+    public decimal? DefaultUnitPrice { get; init; }
 }
 
 public sealed class CustomerSnapshot

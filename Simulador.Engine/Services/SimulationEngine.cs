@@ -46,25 +46,33 @@ public sealed class SimulationEngine
 
             decimal unitPriceApplied = 0m;
 
-            if (request.IsSeller)
+            // prioridade:
+            // 1. digitado
+            // 2. preço do produto
+            // 3. preço médio
+            // 4. warning/erro
+            if (item.UnitPrice.HasValue && item.UnitPrice.Value > 0)
             {
-                if (item.UnitPrice is null)
-                    throw new InvalidOperationException($"UnitPrice required for seller item: {item.Sku}");
-
                 unitPriceApplied = item.UnitPrice.Value;
+            }
+            else if (p.DefaultUnitPrice.HasValue && p.DefaultUnitPrice.Value > 0)
+            {
+                unitPriceApplied = p.DefaultUnitPrice.Value;
             }
             else
             {
                 var key = (request.CompanyBilling, item.Sku);
-                if (pricing.AveragePrices.TryGetValue(key, out var avg))
+
+                if (pricing.AveragePrices.TryGetValue(key, out var avg) && avg > 0)
                 {
                     unitPriceApplied = avg;
                 }
                 else
                 {
                     if (config.MissingPricePolicy == 1)
-                        throw new InvalidOperationException($"Missing average price for {key.CompanyBilling}/{key.Sku}");
-                    warnings.Add("PriceAverageMissingForSomeItems");
+                        throw new InvalidOperationException($"Missing price for {key.CompanyBilling}/{key.Sku}");
+
+                    warnings.Add("PriceMissingForSomeItems");
                     unitPriceApplied = 0m;
                 }
             }

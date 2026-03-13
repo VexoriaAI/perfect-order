@@ -265,6 +265,6 @@ else
     private async Task Logout()
     {
         await JS.InvokeVoidAsync("simuladorAuth.logout");
-        Nav.NavigateTo("/login", true);
+        Nav.NavigateTo("login", true);
     }
 }

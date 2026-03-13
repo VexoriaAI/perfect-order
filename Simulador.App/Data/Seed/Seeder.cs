@@ -70,8 +70,8 @@ public static class Seeder
         {
             db.Products.AddRange(new[]
             {
-                new Product { Sku="SKU001", Description="Produto 1", Unit="UN", WeightKg=2m, VolumeM3=0.03m, PalletUnitsDefault=30, PackagingType="CX" },
-                new Product { Sku="SKU002", Description="Produto 2", Unit="UN", WeightKg=1m, VolumeM3=0.02m, PalletUnitsDefault=50, PackagingType="FD" }
+                new Product { Sku="SKU001", Description="Produto 1", Unit="UN", WeightKg=2m, VolumeM3=0.03m, PalletUnitsDefault=30, PackagingType="CX", DefaultUnitPrice=321.0m },
+                new Product { Sku="SKU002", Description="Produto 2", Unit="UN", WeightKg=1m, VolumeM3=0.02m, PalletUnitsDefault=50, PackagingType="FD", DefaultUnitPrice=21.0m }
             });
             db.SkuRules.AddRange(new[]
             {

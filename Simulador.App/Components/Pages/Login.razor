@@ -1,4 +1,5 @@
-﻿@page "/login"
+﻿@page "/"
+@page "/login"
 @attribute [AllowAnonymous]
 @rendermode InteractiveServer
 
@@ -61,7 +62,7 @@
                 rememberMe = model.RememberMe
             });
 
-            Nav.NavigateTo("/simulator", forceLoad: true);
+            Nav.NavigateTo("simulator", forceLoad: true);
         }
         catch (JSException ex)
         {

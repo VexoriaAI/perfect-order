@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /app
 
 COPY . .
-RUN dotnet restore
-RUN dotnet publish Simulador.App/Simulador.App.csproj -c Release -o /out
+RUN dotnet restore Simulador.App/Simulador.App.csproj
+RUN dotnet publish Simulador.App/Simulador.App.csproj -c Release -o /out --no-restore
 
 # Etapa 2: runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview

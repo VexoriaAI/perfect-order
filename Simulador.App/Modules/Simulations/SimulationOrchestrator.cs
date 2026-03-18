@@ -75,12 +75,25 @@ public sealed class SimulationOrchestrator
         var pricing = new PricingSnapshot();
         if (!request.IsSeller)
         {
+            // Garante que a chave usada no lookup é o DisplayName
+            // igual à planilha: CONCAT(Cód. Empresa, " - ", Empresa) + SKU
+            var company = await _db.BillingCompanies.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CompanyCode == request.CompanyBilling
+                                        || c.DisplayName  == request.CompanyBilling);
+
+            if (company is null)
+                throw new InvalidOperationException($"Empresa de faturamento não encontrada: {request.CompanyBilling}");
+
+            var companyKey = company.DisplayName;
+
             var prices = await _db.PriceAverages.AsNoTracking()
-                .Where(p => p.CompanyBilling == request.CompanyBilling && skus.Contains(p.Sku))
+                .Where(p => p.CompanyBilling == companyKey && skus.Contains(p.Sku))
                 .ToListAsync();
 
             foreach (var p in prices)
-                pricing.AveragePrices[(p.CompanyBilling, p.Sku)] = p.AvgUnitPrice;
+                pricing.AveragePrices[(companyKey, p.Sku)] = p.AvgUnitPrice;
+
+            request.CompanyBilling = companyKey;
         }
 
         var customerSnapshot = new CustomerSnapshot

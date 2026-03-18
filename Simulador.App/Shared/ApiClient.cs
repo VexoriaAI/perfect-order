@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Simulador.App.Modules.BillingCompanies.DTOs;
 using Simulador.Engine.Contracts;
 
 namespace Simulador.App.Shared;
@@ -47,6 +48,13 @@ public sealed class ApiClient
             throw new Exception(err);
         }
         return await resp.Content.ReadFromJsonAsync<SimulationApiResponse>();
+    }
+
+    public async Task<List<BillingCompanyMini>> GetBillingCompaniesAsync()
+    {
+        PropagateAuth();
+        var result = await _http.GetFromJsonAsync<List<BillingCompanyMini>>("/api/billing-companies");
+        return result ?? new();
     }
 }
 

@@ -55,15 +55,38 @@ public sealed class VehicleRecommender
 
         if (chosen is null)
         {
-            // excedeu tudo
-            return new VehicleResult
+            if (isPalletized)
             {
-                Recommended = null,
-                Reason = "Nenhum veículo atende à capacidade",
-                CapacityWarning = isPalletized
-                    ? "Palete e Peso Acima da Capacidade"
-                    : "Peso e Cubagem Acima da Capacidade"
-            };
+                var maxPeso    = vehicles.Max(v => v.MaxWeightKg);
+                var maxPaletes = vehicles.Max(v => v.MaxPallets);
+                var exPeso   = weightKg > maxPeso;
+                var exPalete = pallets  > maxPaletes;
+
+                return new VehicleResult
+                {
+                    Recommended = null,
+                    Reason = "Nenhum veículo atende à capacidade",
+                    CapacityWarning = (exPeso && exPalete) ? "Palete e Peso Acima da Capacidade"
+                                    : exPeso               ? "Peso Acima da Capacidade"
+                                                        : "Palete Acima da Capacidade"
+                };
+            }
+            else
+            {
+                var maxPeso = vehicles.Max(v => v.MaxWeightKg);
+                var maxCub  = vehicles.Max(v => v.MaxVolumeM3);
+                var exPeso = weightKg          > maxPeso;
+                var exCub  = effectiveVolumeM3 > maxCub;
+
+                return new VehicleResult
+                {
+                    Recommended = null,
+                    Reason = "Nenhum veículo atende à capacidade",
+                    CapacityWarning = (exCub && exPeso) ? "Peso e Cubagem Acima da Capacidade"
+                                    : exCub             ? "Cubagem Acima da Capacidade"
+                                                        : "Peso Acima da Capacidade"
+                };
+            }
         }
 
         return new VehicleResult

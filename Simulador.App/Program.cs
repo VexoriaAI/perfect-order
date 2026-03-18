@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Simulador.App.Auth;
 using Simulador.App.Data;
 using Simulador.App.Data.Seed;
+using Simulador.App.Modules.BillingCompanies.Endpoints;
 using Simulador.App.Modules.Catalog.Endpoints;
 using Simulador.App.Modules.Config.Endpoints;
 using Simulador.App.Modules.Customers.Endpoints;
@@ -60,7 +61,7 @@ builder.Services.AddAuthorization(options =>
 
 // Orchestrator + Engine
 builder.Services.AddScoped<SimulationOrchestrator>();
-builder.Services.AddSingleton<SimulationEngine>();
+builder.Services.AddScoped<SimulationEngine>();
 
 // HttpClient para ApiClient (propaga cookies de auth)
 builder.Services.AddHttpClient<ApiClient>((sp, client) =>
@@ -98,6 +99,7 @@ app.MapCustomersEndpoints();
 app.MapVehiclesEndpoints();
 app.MapConfigEndpoints();
 app.MapSimulationEndpoints();
+app.MapBillingCompanyEndpoints();
 
 // seed
 using (var scope = app.Services.CreateScope())
@@ -109,6 +111,7 @@ using (var scope = app.Services.CreateScope())
     await Seeder.SeedAsync(db);
     await RoleSeeder.SeedAsync(scope.ServiceProvider);
     await AdminSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
+    await BillingCompanySeeder.SeedAsync(db);
 }
 
 app.Run();

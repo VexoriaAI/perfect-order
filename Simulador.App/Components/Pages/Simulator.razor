@@ -6,6 +6,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.JSInterop
 @using Simulador.App.Auth
+@using Simulador.App.Modules.BillingCompanies.DTOs
+@using Simulador.App.Modules.BillingCompanies.Entities
 @using Simulador.App.Shared
 @using Simulador.Engine.Contracts
 
@@ -61,7 +63,13 @@ else
 
                 <div class="mb-2">
                     <label class="form-label">Empresa Faturamento</label>
-                    <input class="form-control" @bind="request.CompanyBilling" />
+                    <select class="form-select" @bind="request.CompanyBilling" required>
+                        <option value="">-- selecione --</option>
+                        @foreach (var c in billingCompanies.Where(x => x.IsActive))
+                        {
+                            <option value="@c.DisplayName">@c.DisplayName</option>
+                        }
+                    </select>
                 </div>
 
                 <div class="form-check mb-2">
@@ -202,11 +210,13 @@ else
     private decimal idealFreightUi = 0.06m;
     private decimal acceptableFreightUi = 0.08m;
     private SimulationResult? result;
+    private List<BillingCompanyMini> billingCompanies = new();
 
     protected override async Task OnInitializedAsync()
     {
         var auth = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = auth.User;
+        billingCompanies = await Api.GetBillingCompaniesAsync();
 
         displayName =
             user.FindFirst(ClaimTypes.GivenName)?.Value ??

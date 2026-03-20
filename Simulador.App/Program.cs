@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Simulador.App.Auth;
@@ -23,9 +24,20 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
+
+// Forwarded Headers
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+
+    // libera proxies/rede conhecidos automaticamente
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -80,10 +92,13 @@ builder.Services.AddHttpClient<ApiClient>((sp, client) =>
     client.BaseAddress = new Uri(apiBaseUrl!);
 }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
-    UseCookies = false // não usar cookie container próprio; propagamos manualmente
+    UseCookies = false
 });
 
 var app = builder.Build();
+
+// precisa vir bem cedo no pipeline
+app.UseForwardedHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -91,7 +106,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// só em dev, já que a plataforma termina HTTPS
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 
 app.UseAuthentication();

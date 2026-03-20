@@ -64,9 +64,20 @@ builder.Services.AddScoped<SimulationOrchestrator>();
 builder.Services.AddScoped<SimulationEngine>();
 
 // HttpClient para ApiClient (propaga cookies de auth)
+var apiBaseUrl = builder.Configuration["App:BaseUrl"];
+
+if (builder.Environment.IsDevelopment())
+{
+    apiBaseUrl ??= "http://localhost:5294/";
+}
+else if (string.IsNullOrWhiteSpace(apiBaseUrl))
+{
+    throw new InvalidOperationException("App:BaseUrl não configurado em produção.");
+}
+
 builder.Services.AddHttpClient<ApiClient>((sp, client) =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["App:BaseUrl"] ?? "http://localhost:5294/");
+    client.BaseAddress = new Uri(apiBaseUrl!);
 }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
     UseCookies = false // não usar cookie container próprio; propagamos manualmente

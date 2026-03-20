@@ -136,8 +136,25 @@ app.MapBillingCompanyEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    await db.Database.MigrateAsync();
+    var maxRetries = 5;
+    var delay = TimeSpan.FromSeconds(5);
+
+    for (int i = 0; i < maxRetries; i++)
+    {
+        try
+        {
+            await db.Database.MigrateAsync();
+            break;
+        }
+        catch (Exception ex) when (i < maxRetries - 1)
+        {
+            logger.LogWarning("Banco ainda não disponível. Tentativa {Attempt}/{Max}. Aguardando {Delay}s..., ", 
+                i + 1, maxRetries, delay.TotalSeconds);
+            await Task.Delay(delay);
+        }
+    }
 
     await Seeder.SeedAsync(db);
     await RoleSeeder.SeedAsync(scope.ServiceProvider);

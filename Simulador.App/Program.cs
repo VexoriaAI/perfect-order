@@ -30,7 +30,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedProto;
 
     // libera proxies/rede conhecidos automaticamente
-    options.KnownIPNetworks.Clear();
+    options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
 

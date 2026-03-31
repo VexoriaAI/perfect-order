@@ -28,18 +28,22 @@ public sealed class FreightResult
 {
     public decimal IdealValue { get; set; }
     public decimal AcceptableValue { get; set; }
+    public string Status { get; set; } = "Não informado";
 }
 
 public sealed class VehicleResult
 {
     public string? Recommended { get; set; }
     public string? Reason { get; set; }
-    public string? CapacityWarning { get; set; } // se excedeu
+    public string? CapacityWarning { get; set; }
 }
 
 public sealed class ItemResult
 {
     public string Sku { get; set; } = default!;
+    public string InternalCode { get; set; } = default!;
+    public string Description { get; set; } = default!;
+
     public int Quantity { get; set; }
     public decimal UnitPriceApplied { get; set; }
     public decimal WeightKg { get; set; }

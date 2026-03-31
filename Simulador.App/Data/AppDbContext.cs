@@ -6,6 +6,7 @@ using Simulador.App.Modules.BillingCompanies.Entities;
 using Simulador.App.Modules.Catalog.Entities;
 using Simulador.App.Modules.Config.Entities;
 using Simulador.App.Modules.Customers.Entities;
+using Simulador.App.Modules.Regional.Entities;
 using Simulador.App.Modules.Simulations.Entities;
 using Simulador.App.Modules.Vehicles.Entities;
 
@@ -26,6 +27,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<SimulationRun> SimulationRuns => Set<SimulationRun>();
     public DbSet<SimulationItem> SimulationItems => Set<SimulationItem>();
     public DbSet<BillingCompany> BillingCompanies => Set<BillingCompany>();
+    public DbSet<Regional> Regionals => Set<Regional>();
+    public DbSet<SellerRegional> SellerRegionals => Set<SellerRegional>();  
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,5 +81,23 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
             .WithMany(x => x.Items)
             .HasForeignKey(x => x.SimulationRunId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Regional>()
+            .HasIndex(x => x.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<SellerRegional>()
+            .HasIndex(x => new { x.SellerUserId, x.RegionalId })
+            .IsUnique();
+
+        modelBuilder.Entity<SellerRegional>()
+            .HasOne(x => x.Regional)
+            .WithMany()
+            .HasForeignKey(x => x.RegionalId);
+
+        modelBuilder.Entity<SellerRegional>()
+            .HasOne<ApplicationUser>(x => x.SellerUser)
+            .WithMany()
+            .HasForeignKey(x => x.SellerUserId);
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Simulador.App.Data;
@@ -11,9 +12,11 @@ using Simulador.App.Data;
 namespace Simulador.App.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260329204428_SyncModelAfterSimulationChanges")]
+    partial class SyncModelAfterSimulationChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,29 +155,6 @@ namespace Simulador.App.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("SellerRegional", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RegionalId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("SellerUserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RegionalId");
-
-                    b.HasIndex("SellerUserId", "RegionalId")
-                        .IsUnique();
-
-                    b.ToTable("SellerRegionals");
                 });
 
             modelBuilder.Entity("Simulador.App.Auth.ApplicationUser", b =>
@@ -515,31 +495,6 @@ namespace Simulador.App.Migrations
                     b.ToTable("CustomerRules");
                 });
 
-            modelBuilder.Entity("Simulador.App.Modules.Regional.Entities.Regional", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("Regionals");
-                });
-
             modelBuilder.Entity("Simulador.App.Modules.Simulations.Entities.SimulationItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -622,8 +577,8 @@ namespace Simulador.App.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("SellerId")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("SellerId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ShipmentType")
                         .IsRequired()
@@ -716,25 +671,6 @@ namespace Simulador.App.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("SellerRegional", b =>
-                {
-                    b.HasOne("Simulador.App.Modules.Regional.Entities.Regional", "Regional")
-                        .WithMany()
-                        .HasForeignKey("RegionalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Simulador.App.Auth.ApplicationUser", "SellerUser")
-                        .WithMany()
-                        .HasForeignKey("SellerUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Regional");
-
-                    b.Navigation("SellerUser");
                 });
 
             modelBuilder.Entity("Simulador.App.Modules.Customers.Entities.CustomerAllowedVehicle", b =>

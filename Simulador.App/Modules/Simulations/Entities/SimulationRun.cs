@@ -7,6 +7,11 @@ public class SimulationRun
 
     public string CompanyBilling { get; set; } = default!;
     public bool IsSeller { get; set; }
+    public string? SellerId { get; set; }
+    public Guid? RegionalId { get; set; }
+    public string? StateCode { get; set; }
+    public string? CityName { get; set; }
+
     public bool IsPalletized { get; set; }
     public string ShipmentType { get; set; } = "Dedicated";
 

@@ -28,13 +28,20 @@ public sealed class SimulationOrchestrator
             .Include(x => x.AllowedVehicles)
             .FirstOrDefaultAsync(x => x.CustomerCode == request.CustomerCode);
 
-        if (customer is null) throw new InvalidOperationException("Customer not found");
-        if (!customer.IsActive) throw new InvalidOperationException("Customer inactive");
+        if (customer is null)
+            throw new InvalidOperationException("Customer not found");
+
+        if (!customer.IsActive)
+            throw new InvalidOperationException("Customer inactive");
 
         var vehicleList = await _db.Vehicles.AsNoTracking().ToListAsync();
 
-        // Products by SKU
-        var skus = request.Items.Select(i => i.Sku).Distinct().ToList();
+        var skus = request.Items
+            .Select(i => i.Sku)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
         var products = await _db.Products.AsNoTracking()
             .Where(p => skus.Contains(p.Sku))
             .ToListAsync();
@@ -43,6 +50,7 @@ public sealed class SimulationOrchestrator
             p => p.Sku,
             p => new ProductSnapshot
             {
+                InternalCode = p.InternalCode,
                 Sku = p.Sku,
                 Description = p.Description,
                 Unit = p.Unit,
@@ -55,7 +63,6 @@ public sealed class SimulationOrchestrator
             },
             StringComparer.OrdinalIgnoreCase);
 
-        // SKU rules (valid/inactive)
         var skuRules = await _db.SkuRules.AsNoTracking()
             .Where(r => skus.Contains(r.Sku))
             .ToListAsync();
@@ -68,18 +75,17 @@ public sealed class SimulationOrchestrator
                 throw new InvalidOperationException($"SKU sem regra (valid/inativo): {sku}");
 
             if (!rule.IsValidForSale || rule.IsInactive)
-                throw new InvalidOperationException($"SKU invalido/inativo: {sku}");
+                throw new InvalidOperationException($"SKU inválido/inativo: {sku}");
         }
 
-        // pricing (optional)
         var pricing = new PricingSnapshot();
+
         if (!request.IsSeller)
         {
-            // Garante que a chave usada no lookup é o DisplayName
-            // igual à planilha: CONCAT(Cód. Empresa, " - ", Empresa) + SKU
             var company = await _db.BillingCompanies.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.CompanyCode == request.CompanyBilling
-                                        || c.DisplayName  == request.CompanyBilling);
+                .FirstOrDefaultAsync(c =>
+                    c.CompanyCode == request.CompanyBilling ||
+                    c.DisplayName == request.CompanyBilling);
 
             if (company is null)
                 throw new InvalidOperationException($"Empresa de faturamento não encontrada: {request.CompanyBilling}");
@@ -133,12 +139,15 @@ public sealed class SimulationOrchestrator
 
         var result = _engine.Run(request, customerSnapshot, productDict, vehiclesSnapshot, pricing, configSnapshot);
 
-        // persist run
         var run = new SimulationRun
         {
             CustomerId = customer.Id,
             CompanyBilling = request.CompanyBilling,
             IsSeller = request.IsSeller,
+            SellerId = request.SellerId,
+            RegionalId = request.RegionalId,
+            StateCode = request.StateCode,
+            CityName = request.CityName,
             IsPalletized = request.IsPalletized,
             ShipmentType = request.ShipmentType,
             LossPercentApplied = result.Loss.AppliedPercent,
@@ -146,12 +155,19 @@ public sealed class SimulationOrchestrator
             FreightAcceptablePercent = request.Freight.AcceptablePercent ?? configSnapshot.FreightAcceptablePercent,
             RequestJson = JsonSerializer.Serialize(request),
             ResultJson = JsonSerializer.Serialize(result),
-            Items = request.Items.Select(i => new SimulationItem
+            Items = request.Items.Select(i =>
             {
-                Sku = i.Sku,
-                Quantity = i.Quantity,
-                UnitPriceInput = i.UnitPrice,
-                PalletUnitsOverride = i.PalletUnitsOverride
+                productDict.TryGetValue(i.Sku, out var product);
+
+                return new SimulationItem
+                {
+                    Sku = i.Sku,
+                    InternalCode = product?.InternalCode ?? string.Empty,
+                    Description = product?.Description ?? string.Empty,
+                    Quantity = i.Quantity,
+                    UnitPriceInput = i.UnitPrice,
+                    PalletUnitsOverride = i.PalletUnitsOverride
+                };
             }).ToList()
         };
 

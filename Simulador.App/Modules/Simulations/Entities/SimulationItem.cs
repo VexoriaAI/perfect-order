@@ -7,7 +7,10 @@ public class SimulationItem
     public SimulationRun SimulationRun { get; set; } = default!;
 
     public string Sku { get; set; } = default!;
+    public string InternalCode { get; set; } = default!;
+    public string Description { get; set; } = default!;
+
     public int Quantity { get; set; }
     public decimal? UnitPriceInput { get; set; }
-    public int? PalletUnitsOverride { get; set; } // sugestão (unid/palete)
+    public int? PalletUnitsOverride { get; set; }
 }

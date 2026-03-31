@@ -1,8 +1,99 @@
 ﻿@attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@using Simulador.App.Modules.Simulations.Dtos
+@using Simulador.App.Shared
+@page "/simulation-history"
+@inject ApiClient Api
 
-<h3>SimulationsHistory</h3>
+<h3>Histórico de Simulações</h3>
+
+@if (rows is null)
+{
+    <p>Carregando...</p>
+}
+else if (rows.Count == 0)
+{
+    <p>Nenhuma simulação encontrada.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Data</th>
+                <th>Empresa</th>
+                <th>Estado</th>
+                <th>Cidade</th>
+                <th>Itens</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <td>@row.RunId</td>
+                    <td>@row.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@row.CompanyBilling</td>
+                    <td>@row.StateCode</td>
+                    <td>@row.CityName</td>
+                    <td>@row.ItemCount</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => LoadDetail(row.RunId)">
+                            Ver
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (detail is not null)
+{
+    <hr />
+    <h4>Detalhe</h4>
+    <p><b>Run:</b> @detail.RunId</p>
+    <p><b>Data:</b> @detail.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+    <p><b>Local:</b> @detail.StateCode / @detail.CityName</p>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Código Interno</th>
+                <th>SKU</th>
+                <th>Descrição</th>
+                <th>Qtd</th>
+                <th>Preço</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in detail.Items)
+            {
+                <tr>
+                    <td>@item.InternalCode</td>
+                    <td>@item.Sku</td>
+                    <td>@item.Description</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.UnitPriceInput</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
+    private List<SimulationHistoryRowDto>? rows;
+    private SimulationHistoryDetailDto? detail;
 
+    protected override async Task OnInitializedAsync()
+    {
+        rows = await Api.GetSimulationHistoryAsync();
+    }
+
+    private async Task LoadDetail(Guid runId)
+    {
+        detail = await Api.GetSimulationHistoryDetailAsync(runId);
+    }
 }

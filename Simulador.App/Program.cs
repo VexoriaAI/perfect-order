@@ -1,16 +1,11 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Simulador.App;
 using Simulador.App.Auth;
 using Simulador.App.Data;
 using Simulador.App.Data.Seed;
-using Simulador.App.Modules.BillingCompanies.Endpoints;
-using Simulador.App.Modules.Catalog.Endpoints;
-using Simulador.App.Modules.Config.Endpoints;
-using Simulador.App.Modules.Customers.Endpoints;
 using Simulador.App.Modules.Simulations;
-using Simulador.App.Modules.Simulations.Endpoints;
-using Simulador.App.Modules.Vehicles.Endpoints;
 using Simulador.App.Shared;
 using Simulador.Engine.Services;
 
@@ -125,12 +120,7 @@ app.MapRazorComponents<Simulador.App.Components.App>()
 app.MapAuthEndpoints();
 
 // endpoints atuais
-app.MapCatalogEndpoints();
-app.MapCustomersEndpoints();
-app.MapVehiclesEndpoints();
-app.MapConfigEndpoints();
-app.MapSimulationEndpoints();
-app.MapBillingCompanyEndpoints();
+app.MapAppEndpoints();
 
 // seed
 using (var scope = app.Services.CreateScope())

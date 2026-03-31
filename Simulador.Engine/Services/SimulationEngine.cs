@@ -19,18 +19,19 @@ public sealed class SimulationEngine
         if (!customer.IsActive)
             throw new InvalidOperationException("Customer is inactive");
 
-        // restrição de recebimento (MVP: warning)
         var warnings = new List<string>();
+
         if (request.IsPalletized && !customer.Rules.AllowsPalletized)
             warnings.Add("CustomerDoesNotAllowPalletized");
+
         if (!request.IsPalletized && !customer.Rules.AllowsBulk)
             warnings.Add("CustomerDoesNotAllowBulk");
 
         var itemResults = new List<ItemResult>();
-        decimal totalWeight = 0;
-        decimal totalVolume = 0;
+        decimal totalWeight = 0m;
+        decimal totalVolume = 0m;
         int totalPallets = 0;
-        decimal totalValue = 0;
+        decimal totalValue = 0m;
 
         foreach (var item in request.Items)
         {
@@ -38,30 +39,32 @@ public sealed class SimulationEngine
                 throw new InvalidOperationException($"Product not found or inactive: {item.Sku}");
 
             var qty = item.Quantity;
-            var w = qty * p.WeightKg;
-            var v = qty * p.VolumeM3;
+            var weight = qty * p.WeightKg;
+            var volume = qty * p.VolumeM3;
 
             var unitsPerPallet = item.PalletUnitsOverride ?? p.PalletUnitsDefault;
-            var (basePal, byW, finalPal) = _pallets.Calculate(qty, unitsPerPallet, w, customer.Rules.MaxKgPerPallet);
+            var (basePal, byWeight, finalPal) = _pallets.Calculate(
+                qty,
+                unitsPerPallet,
+                weight,
+                customer.Rules.MaxKgPerPallet);
 
-            decimal unitPriceApplied = 0m;
+            decimal unitPriceApplied;
 
-            // prioridade:
-            // 1. digitado
-            // 2. preço do produto
-            // 3. preço médio
-            // 4. warning/erro
-            if (item.UnitPrice.HasValue && item.UnitPrice.Value > 0)
+            if (request.IsSeller)
             {
+                if (!item.UnitPrice.HasValue || item.UnitPrice.Value <= 0)
+                    throw new InvalidOperationException($"Preço unitário obrigatório para o SKU {p.Sku}");
+
                 unitPriceApplied = item.UnitPrice.Value;
-            }
-            else if (p.DefaultUnitPrice.HasValue && p.DefaultUnitPrice.Value > 0)
-            {
-                unitPriceApplied = p.DefaultUnitPrice.Value;
             }
             else
             {
-                var key = (request.CompanyBilling, item.Sku);
+                var key = (request.CompanyBilling, p.Sku);
+
+                Console.WriteLine($"CompanyBilling request final: {request.CompanyBilling}");
+                Console.WriteLine($"SKU: {p.Sku}");
+                Console.WriteLine($"Pricing keys loaded: {pricing.AveragePrices.Count}");
 
                 if (pricing.AveragePrices.TryGetValue(key, out var avg) && avg > 0)
                 {
@@ -72,7 +75,7 @@ public sealed class SimulationEngine
                     if (config.MissingPricePolicy == 1)
                         throw new InvalidOperationException($"Missing price for {key.CompanyBilling}/{key.Sku}");
 
-                    warnings.Add("PriceMissingForSomeItems");
+                    warnings.Add("Alguns itens não possuem preço definido. Verifique os detalhes para mais informações.");
                     unitPriceApplied = 0m;
                 }
             }
@@ -81,31 +84,50 @@ public sealed class SimulationEngine
 
             itemResults.Add(new ItemResult
             {
-                Sku = item.Sku,
+                Sku = p.Sku,
+                InternalCode = p.InternalCode,
+                Description = p.Description,
                 Quantity = qty,
                 UnitPriceApplied = unitPriceApplied,
-                WeightKg = w,
-                VolumeM3 = v,
+                WeightKg = weight,
+                VolumeM3 = volume,
                 PalletsBase = basePal,
-                PalletsByWeightLimit = byW,
+                PalletsByWeightLimit = byWeight,
                 PalletsFinal = finalPal
             });
 
-            totalWeight += w;
-            totalVolume += v;
+            totalWeight += weight;
+            totalVolume += volume;
             totalPallets += finalPal;
             totalValue += value;
         }
 
         var lossPct = request.Loss.LossPercent ?? config.DefaultLossPercent;
-        if (lossPct < 0 || lossPct > 0.30m) throw new InvalidOperationException("LossPercent out of range");
+        if (lossPct < 0 || lossPct > 0.30m)
+            throw new InvalidOperationException("LossPercent out of range");
 
-        var effectiveVolume = request.IsPalletized ? totalVolume : totalVolume * (1 - lossPct);
+        var effectiveVolume = request.IsPalletized
+            ? totalVolume
+            : totalVolume * (1 - lossPct);
 
         var idealPct = request.Freight.IdealPercent ?? config.FreightIdealPercent;
-        var accPct = request.Freight.AcceptablePercent ?? config.FreightAcceptablePercent;
+        var acceptablePct = request.Freight.AcceptablePercent ?? config.FreightAcceptablePercent;
 
-        var (freteIdeal, freteAcc) = _freight.Estimate(totalValue, idealPct, accPct);
+        var (freteIdeal, freteAceitavel) = _freight.Estimate(totalValue, idealPct, acceptablePct);
+
+        var freightStatus = "Não informado";
+
+        if (request.Freight.ActualValue.HasValue)
+        {
+            var actual = request.Freight.ActualValue.Value;
+
+            if (actual <= freteIdeal)
+                freightStatus = "Ideal";
+            else if (actual <= freteAceitavel)
+                freightStatus = "Aceitável";
+            else
+                freightStatus = "Acima do aceitável";
+        }
 
         var vehicle = _vehicles.Recommend(
             request.IsPalletized,
@@ -132,7 +154,8 @@ public sealed class SimulationEngine
             Freight = new FreightResult
             {
                 IdealValue = freteIdeal,
-                AcceptableValue = freteAcc
+                AcceptableValue = freteAceitavel,
+                Status = freightStatus
             },
             Vehicle = vehicle,
             Warnings = warnings.Distinct().ToList(),

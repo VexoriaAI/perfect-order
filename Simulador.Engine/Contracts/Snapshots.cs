@@ -2,15 +2,16 @@
 
 public sealed class ProductSnapshot
 {
-    public string Sku { get; init; } = default!;
-    public string Description { get; init; } = default!;
-    public string Unit { get; init; } = default!;
-    public decimal WeightKg { get; init; }
-    public decimal VolumeM3 { get; init; }
-    public int PalletUnitsDefault { get; init; }
-    public string? PackagingType { get; init; }
-    public bool IsActive { get; init; }
-    public decimal? DefaultUnitPrice { get; init; }
+    public string InternalCode { get; set; } = default!;
+    public string Sku { get; set; } = default!;
+    public string Description { get; set; } = default!;
+    public string Unit { get; set; } = default!;
+    public decimal WeightKg { get; set; }
+    public decimal VolumeM3 { get; set; }
+    public int PalletUnitsDefault { get; set; }
+    public string? PackagingType { get; set; }
+    public bool IsActive { get; set; }
+    public decimal? DefaultUnitPrice { get; set; }
 }
 
 public sealed class CustomerSnapshot

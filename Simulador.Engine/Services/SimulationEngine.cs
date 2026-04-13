@@ -98,7 +98,7 @@ public sealed class SimulationEngine
 
             totalWeight += weight;
             totalVolume += volume;
-            totalPallets += finalPal;
+            totalPallets += basePal;
             totalValue += value;
         }
 

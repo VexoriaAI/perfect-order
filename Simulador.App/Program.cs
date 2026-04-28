@@ -122,6 +122,12 @@ app.MapAuthEndpoints();
 // endpoints atuais
 app.MapAppEndpoints();
 
+app.MapGet("/logout", async (SignInManager<ApplicationUser> signInManager) =>
+{
+    await signInManager.SignOutAsync();
+    return Results.Redirect("/login");
+});
+
 // seed
 using (var scope = app.Services.CreateScope())
 {

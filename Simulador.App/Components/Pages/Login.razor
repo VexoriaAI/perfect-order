@@ -1,14 +1,15 @@
-﻿@page "/"
-@page "/login"
+﻿@page "/login"
 @attribute [AllowAnonymous]
 @rendermode InteractiveServer
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.JSInterop
 
 @inject IJSRuntime JS
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
 <h3>Login</h3>
 
@@ -47,6 +48,18 @@
     private readonly LoginVm model = new();
     private bool isBusy;
     private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            Nav.NavigateTo("/simulator", true);
+            return;
+        }
+    }
 
     private async Task DoLogin()
     {

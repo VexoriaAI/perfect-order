@@ -1,0 +1,19 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<div class="alert alert-info">Redirecionando...</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+            Nav.NavigateTo("/simulator", true);
+        else
+            Nav.NavigateTo("/login", true);
+    }
+}

@@ -26,25 +26,6 @@
 }
 else
 {
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <div>
-            <strong>@(displayName ?? "Usuário")</strong> —
-            Perfil:
-            @if (isAdmin)
-            {
-                <span class="badge bg-danger">Admin</span>
-            }
-            else if (isSeller)
-            {
-                <span class="badge bg-secondary">Vendedor</span>
-            }
-        </div>
-
-        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="Logout">
-            Sair
-        </button>
-    </div>
-
     <div class="row g-3">
         <div class="col-lg-4">
             <div class="card p-3">

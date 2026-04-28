@@ -1,0 +1,57 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Simulador.App.Auth
+
+@inject AuthenticationStateProvider AuthStateProvider
+
+@if (_loaded && isAuthenticated)
+{
+    <div class="w-100 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <strong>@(displayName ?? "Usuário")</strong>
+            <span>— Perfil:</span>
+
+            @if (isAdmin)
+            {
+                <span class="badge bg-danger">Admin</span>
+            }
+            else if (isSeller)
+            {
+                <span class="badge bg-secondary">Vendedor</span>
+            }
+        </div>
+
+        <a class="btn btn-outline-danger btn-sm" href="/logout">
+            Sair
+        </a>
+    </div>
+}
+
+@code {
+    private bool _loaded;
+    private bool isAuthenticated;
+    private bool isAdmin;
+    private bool isSeller;
+    private string? displayName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+
+        isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+
+        if (isAuthenticated)
+        {
+            displayName =
+                user.FindFirst(ClaimTypes.GivenName)?.Value ??
+                user.FindFirst(ClaimTypes.Name)?.Value ??
+                user.Identity?.Name;
+
+            isAdmin = user.IsInRole(Roles.Admin);
+            isSeller = user.IsInRole(Roles.Vendedor);
+        }
+
+        _loaded = true;
+    }
+}

@@ -65,7 +65,10 @@ else
                     <label class="form-label">Empresa Faturamento</label>
                     <select class="form-select" @bind="request.CompanyBilling">
                         <option value="">-- selecione --</option>
-                        @foreach (var c in billingCompanies.Where(x => x.IsActive).OrderBy(x => x.DisplayName))
+                        @foreach (var c in billingCompanies
+                                .Where(x => x.IsActive)
+                                .OrderBy(x => int.TryParse(x.CompanyCode, out var n) ? n : int.MaxValue)
+                                .ThenBy(x => x.DisplayName))
                         {
                             <option value="@c.DisplayName">@c.DisplayName</option>
                         }

@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Simulador</a>
     </div>
@@ -9,32 +11,48 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="login" Match="NavLinkMatch.All">
-                <span class="bi bi-person-circle" aria-hidden="true"></span> Login
-            </NavLink>
-        </div>
+        <AuthorizeView>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/login" Match="NavLinkMatch.All">
+                        <span class="bi bi-person-circle" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+            </NotAuthorized>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="simulator">
-                <span class="bi bi-calculator" aria-hidden="true"></span> Simulador
-            </NavLink>
-        </div>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/simulator">
+                        <span class="bi bi-calculator" aria-hidden="true"></span> Simulador
+                    </NavLink>
+                </div>
 
-        @* Deixa comentado por enquanto *@
-        @*
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="history">
-                <span class="bi bi-clock-history" aria-hidden="true"></span> Histórico
-            </NavLink>
-        </div>
+                <AuthorizeView Roles="Admin" Context="adminContext">
+                    <Authorized>
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="/billing-companies">
+                                <span class="bi bi-building" aria-hidden="true"></span> Empresas
+                            </NavLink>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/customers">
-                <span class="bi bi-gear" aria-hidden="true"></span> Admin - Clientes
-            </NavLink>
-        </div>
-        *@
+                @* Deixa comentado por enquanto *@
+                @*
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/history">
+                        <span class="bi bi-clock-history" aria-hidden="true"></span> Histórico
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/admin/customers">
+                        <span class="bi bi-gear" aria-hidden="true"></span> Admin - Clientes
+                    </NavLink>
+                </div>
+                *@
+            </Authorized>
+        </AuthorizeView>
 
     </nav>
 </div>

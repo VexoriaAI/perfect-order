@@ -62,6 +62,24 @@ public sealed class ApiClient
         return result ?? new();
     }
 
+    public async Task<BillingCompanyMini?> CreateBillingCompanyAsync(BillingCompanyCreateDto dto)
+    {
+        PropagateAuth();
+
+        var resp = await _http.PostAsJsonAsync("/api/billing-companies", dto);
+        var body = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception(body);
+
+        return System.Text.Json.JsonSerializer.Deserialize<BillingCompanyMini>(
+            body,
+            new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    }
+
     public async Task<List<ProductMini>> GetProductsAsync()
     {
         PropagateAuth();

@@ -17,153 +17,197 @@
 }
 else
 {
-    <div class="row g-3">
-        <div class="col-lg-4">
-            <div class="card p-3">
-                <h5>Novo produto</h5>
+    <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Produtos cadastrados</h5>
 
-                <div class="mb-2">
-                    <label class="form-label">Código interno</label>
-                    <input class="form-control" @bind="form.InternalCode" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">SKU</label>
-                    <input class="form-control" @bind="form.Sku" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Descrição</label>
-                    <input class="form-control" @bind="form.Description" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Unidade</label>
-                    <input class="form-control" @bind="form.Unit" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Tipo embalagem</label>
-                    <input class="form-control" @bind="form.PackagingType" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Peso (Kg)</label>
-                    <input class="form-control" type="number" step="0.001" @bind="form.WeightKg" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Cubagem (m³)</label>
-                    <input class="form-control" type="number" step="0.000001" @bind="form.VolumeM3" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Palete padrão</label>
-                    <input class="form-control" type="number" @bind="form.PalletUnitsDefault" />
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label">Preço padrão</label>
-                    <input class="form-control" type="number" step="0.01" @bind="form.DefaultUnitPrice" />
-                </div>
-
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" @bind="form.IsActive" />
-                    <label class="form-check-label">Ativo</label>
-                </div>
-
-                <button class="btn btn-primary w-100" @onclick="SaveAsync" disabled="@isBusy">
-                    @(isBusy ? "Salvando..." : "Cadastrar")
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" @onclick="OpenCreateModal" disabled="@isBusy">
+                    Novo produto
                 </button>
 
-                @if (!string.IsNullOrWhiteSpace(message))
-                {
-                    <div class="alert alert-success mt-3">@message</div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(error))
-                {
-                    <div class="alert alert-danger mt-3">@error</div>
-                }
+                <button class="btn btn-outline-secondary btn-sm" @onclick="LoadAsync" disabled="@isBusy">
+                    Atualizar
+                </button>
             </div>
         </div>
 
-        <div class="col-lg-8">
-            <div class="card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Produtos cadastrados</h5>
-                    <button class="btn btn-outline-secondary btn-sm" @onclick="LoadAsync" disabled="@isBusy">
-                        Atualizar
-                    </button>
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+
+        @if (products.Count == 0)
+        {
+            <div class="alert alert-warning mb-0">Nenhum produto cadastrado.</div>
+        }
+        else
+        {
+            <table class="table table-striped table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Cód. interno</th>
+                        <th>SKU</th>
+                        <th>Descrição</th>
+                        <th>Un.</th>
+                        <th>Peso</th>
+                        <th>Cubagem</th>
+                        <th>Palete</th>
+                        <th>Ativo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in PagedProducts)
+                    {
+                        <tr>
+                            <td>@p.InternalCode</td>
+                            <td>@p.Sku</td>
+                            <td>@p.Description</td>
+                            <td>@p.Unit</td>
+                            <td>@p.WeightKg</td>
+                            <td>@p.VolumeM3</td>
+                            <td>@p.PalletUnitsDefault</td>
+                            <td>@(p.IsActive ? "Sim" : "Não")</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1"
+                                        @onclick="() => OpenEditModal(p)"
+                                        disabled="@isBusy">
+                                    Editar
+                                </button>
+
+                                <button class="btn btn-sm @(p.IsActive ? "btn-outline-warning" : "btn-outline-success")"
+                                        @onclick="() => ToggleActiveAsync(p)"
+                                        disabled="@isBusy">
+                                    @(p.IsActive ? "Inativar" : "Ativar")
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (TotalPages > 1)
+            {
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted">
+                        Página @currentPage de @TotalPages
+                    </div>
+
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-secondary btn-sm"
+                                @onclick="() => GoToPage(currentPage - 1)"
+                                disabled="@(currentPage == 1)">
+                            Anterior
+                        </button>
+
+                        @foreach (var pageNumber in PageNumbers)
+                        {
+                            <button class="btn @(pageNumber == currentPage ? "btn-primary" : "btn-outline-primary") btn-sm"
+                                    @onclick="() => GoToPage(pageNumber)">
+                                @pageNumber
+                            </button>
+                        }
+
+                        <button class="btn btn-outline-secondary btn-sm"
+                                @onclick="() => GoToPage(currentPage + 1)"
+                                disabled="@(currentPage == TotalPages)">
+                            Próxima
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+}
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(editingProductId.HasValue ? "Editar produto" : "Novo produto")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal" disabled="@isBusy"></button>
                 </div>
 
-                @if (products.Count == 0)
-                {
-                    <div class="alert alert-warning mb-0">Nenhum produto cadastrado.</div>
-                }
-                else
-                {
-                    <table class="table table-striped table-sm align-middle">
-                        <thead>
-                            <tr>
-                                <th>Cód. interno</th>
-                                <th>SKU</th>
-                                <th>Descrição</th>
-                                <th>Un.</th>
-                                <th>Peso</th>
-                                <th>Cubagem</th>
-                                <th>Palete</th>
-                                <th>Ativo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in PagedProducts)
-                            {
-                                <tr>
-                                    <td>@p.InternalCode</td>
-                                    <td>@p.Sku</td>
-                                    <td>@p.Description</td>
-                                    <td>@p.Unit</td>
-                                    <td>@p.WeightKg</td>
-                                    <td>@p.VolumeM3</td>
-                                    <td>@p.PalletUnitsDefault</td>
-                                    <td>@(p.IsActive ? "Sim" : "Não")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-
-                    @if (TotalPages > 1)
+                <div class="modal-body">
+                    @if (!string.IsNullOrWhiteSpace(modalError))
                     {
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="text-muted">
-                                Página @currentPage de @TotalPages
-                            </div>
+                        <div class="alert alert-danger">@modalError</div>
+                    }
 
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-outline-secondary btn-sm"
-                                        @onclick="() => GoToPage(currentPage - 1)"
-                                        disabled="@(currentPage == 1)">
-                                    Anterior
-                                </button>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Código interno</label>
+                            <input class="form-control" @bind="form.InternalCode" />
+                        </div>
 
-                                @foreach (var pageNumber in PageNumbers)
-                                {
-                                    <button class="btn @(pageNumber == currentPage ? "btn-primary" : "btn-outline-primary") btn-sm"
-                                            @onclick="() => GoToPage(pageNumber)">
-                                        @pageNumber
-                                    </button>
-                                }
+                        <div class="col-md-6">
+                            <label class="form-label">SKU</label>
+                            <input class="form-control" @bind="form.Sku" />
+                        </div>
 
-                                <button class="btn btn-outline-secondary btn-sm"
-                                        @onclick="() => GoToPage(currentPage + 1)"
-                                        disabled="@(currentPage == TotalPages)">
-                                    Próxima
-                                </button>
+                        <div class="col-12">
+                            <label class="form-label">Descrição</label>
+                            <input class="form-control" @bind="form.Description" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Unidade</label>
+                            <input class="form-control" @bind="form.Unit" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo embalagem</label>
+                            <input class="form-control" @bind="form.PackagingType" />
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" @bind="form.IsActive" />
+                                <label class="form-check-label">Ativo</label>
                             </div>
                         </div>
-                    }
-                }
+
+                        <div class="col-md-4">
+                            <label class="form-label">Peso (Kg)</label>
+                            <input class="form-control" type="number" step="0.001" @bind="form.WeightKg" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Cubagem (m³)</label>
+                            <input class="form-control" type="number" step="0.000001" @bind="form.VolumeM3" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Palete padrão</label>
+                            <input class="form-control" type="number" @bind="form.PalletUnitsDefault" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Preço padrão</label>
+                            <input class="form-control" type="number" step="0.01" @bind="form.DefaultUnitPrice" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="CloseModal" disabled="@isBusy">
+                        Cancelar
+                    </button>
+
+                    <button class="btn btn-primary" @onclick="SaveAsync" disabled="@isBusy">
+                        @(isBusy ? "Salvando..." : (editingProductId.HasValue ? "Salvar alterações" : "Cadastrar"))
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -174,9 +218,12 @@ else
     private bool isBusy;
     private string? error;
     private string? message;
+    private string? modalError;
 
     private List<ProductAdminDto> products = new();
     private ProductCreateDto form = NewForm();
+    private Guid? editingProductId;
+    private bool showModal;
 
     private const int PageSize = 10;
     private int currentPage = 1;
@@ -220,6 +267,45 @@ else
         }
     }
 
+    private void OpenCreateModal()
+    {
+        editingProductId = null;
+        form = NewForm();
+        modalError = null;
+        showModal = true;
+    }
+
+    private void OpenEditModal(ProductAdminDto product)
+    {
+        editingProductId = product.Id;
+        form = new ProductCreateDto
+        {
+            InternalCode = product.InternalCode,
+            Sku = product.Sku,
+            Description = product.Description,
+            Unit = product.Unit,
+            WeightKg = product.WeightKg,
+            VolumeM3 = product.VolumeM3,
+            PalletUnitsDefault = product.PalletUnitsDefault,
+            PackagingType = product.PackagingType,
+            IsActive = product.IsActive,
+            DefaultUnitPrice = product.DefaultUnitPrice
+        };
+        modalError = null;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        if (isBusy)
+            return;
+
+        showModal = false;
+        editingProductId = null;
+        form = NewForm();
+        modalError = null;
+    }
+
     private async Task SaveAsync()
     {
         try
@@ -227,6 +313,7 @@ else
             isBusy = true;
             error = null;
             message = null;
+            modalError = null;
 
             if (string.IsNullOrWhiteSpace(form.InternalCode))
                 throw new InvalidOperationException("Informe o código interno.");
@@ -240,16 +327,70 @@ else
             if (string.IsNullOrWhiteSpace(form.Unit))
                 throw new InvalidOperationException("Informe a unidade.");
 
-            var created = await Api.CreateProductAsync(form);
+            if (editingProductId.HasValue)
+            {
+                var updated = await Api.UpdateProductAsync(editingProductId.Value, new ProductUpdateDto
+                {
+                    InternalCode = form.InternalCode,
+                    Sku = form.Sku,
+                    Description = form.Description,
+                    Unit = form.Unit,
+                    WeightKg = form.WeightKg,
+                    VolumeM3 = form.VolumeM3,
+                    PalletUnitsDefault = form.PalletUnitsDefault,
+                    PackagingType = form.PackagingType,
+                    IsActive = form.IsActive,
+                    DefaultUnitPrice = form.DefaultUnitPrice
+                });
 
-            if (created is null)
-                throw new InvalidOperationException("Não foi possível cadastrar o produto.");
+                if (updated is null)
+                    throw new InvalidOperationException("Não foi possível atualizar o produto.");
 
-            message = "Produto cadastrado com sucesso.";
+                message = "Produto atualizado com sucesso.";
+            }
+            else
+            {
+                var created = await Api.CreateProductAsync(form);
+
+                if (created is null)
+                    throw new InvalidOperationException("Não foi possível cadastrar o produto.");
+
+                message = "Produto cadastrado com sucesso.";
+            }
+
+            await LoadProductsOnlyAsync();
+            showModal = false;
+            editingProductId = null;
             form = NewForm();
+        }
+        catch (Exception ex)
+        {
+            modalError = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
 
-            products = await Api.GetProductsAdminAsync();
-            currentPage = 1;
+    private async Task ToggleActiveAsync(ProductAdminDto product)
+    {
+        try
+        {
+            isBusy = true;
+            error = null;
+            message = null;
+
+            var updated = await Api.ToggleProductActiveAsync(product.Id);
+
+            if (updated is null)
+                throw new InvalidOperationException("Não foi possível alterar o status do produto.");
+
+            message = updated.IsActive
+                ? "Produto ativado com sucesso."
+                : "Produto inativado com sucesso.";
+
+            await LoadProductsOnlyAsync();
         }
         catch (Exception ex)
         {
@@ -259,6 +400,14 @@ else
         {
             isBusy = false;
         }
+    }
+
+    private async Task LoadProductsOnlyAsync()
+    {
+        products = await Api.GetProductsAdminAsync();
+
+        if (currentPage > TotalPages)
+            currentPage = TotalPages;
     }
 
     private void GoToPage(int page)

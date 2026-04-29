@@ -14,7 +14,12 @@ public static class CatalogEndpoints
             .WithTags("Products")
             .RequireAuthorization();
 
-        // listagem completa para admin
+        group.MapGet("/", async (AppDbContext db) =>
+            await db.Products
+                .AsNoTracking()
+                .OrderBy(p => p.Sku)
+                .ToListAsync());
+
         group.MapGet("/admin", async (AppDbContext db) =>
         {
             var items = await db.Products
@@ -106,7 +111,97 @@ public static class CatalogEndpoints
             });
         });
 
-        // mantém para o simulador
+        group.MapPut("/{id:guid}", async (Guid id, ProductUpdateDto dto, AppDbContext db) =>
+        {
+            var product = await db.Products.FirstOrDefaultAsync(x => x.Id == id);
+            if (product is null)
+                return Results.NotFound(new { error = "Produto não encontrado." });
+
+            var internalCode = dto.InternalCode?.Trim();
+            var sku = dto.Sku?.Trim().ToUpperInvariant();
+            var description = dto.Description?.Trim();
+            var unit = dto.Unit?.Trim().ToUpperInvariant();
+            var packagingType = dto.PackagingType?.Trim().ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(internalCode))
+                return Results.BadRequest(new { error = "Código interno é obrigatório." });
+
+            if (string.IsNullOrWhiteSpace(sku))
+                return Results.BadRequest(new { error = "SKU é obrigatório." });
+
+            if (string.IsNullOrWhiteSpace(description))
+                return Results.BadRequest(new { error = "Descrição é obrigatória." });
+
+            if (string.IsNullOrWhiteSpace(unit))
+                return Results.BadRequest(new { error = "Unidade é obrigatória." });
+
+            if (dto.WeightKg < 0)
+                return Results.BadRequest(new { error = "Peso não pode ser negativo." });
+
+            if (dto.VolumeM3 < 0)
+                return Results.BadRequest(new { error = "Cubagem não pode ser negativa." });
+
+            if (dto.PalletUnitsDefault < 0)
+                return Results.BadRequest(new { error = "Palete padrão não pode ser negativo." });
+
+            var skuExists = await db.Products.AnyAsync(x => x.Id != id && x.Sku == sku);
+            if (skuExists)
+                return Results.BadRequest(new { error = $"Já existe outro produto com SKU {sku}." });
+
+            product.InternalCode = internalCode;
+            product.Sku = sku;
+            product.Description = description;
+            product.Unit = unit;
+            product.WeightKg = dto.WeightKg;
+            product.VolumeM3 = dto.VolumeM3;
+            product.PalletUnitsDefault = dto.PalletUnitsDefault;
+            product.PackagingType = packagingType;
+            product.IsActive = dto.IsActive;
+            product.DefaultUnitPrice = dto.DefaultUnitPrice;
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new ProductAdminDto
+            {
+                Id = product.Id,
+                InternalCode = product.InternalCode,
+                Sku = product.Sku,
+                Description = product.Description,
+                Unit = product.Unit,
+                WeightKg = product.WeightKg,
+                VolumeM3 = product.VolumeM3,
+                PalletUnitsDefault = product.PalletUnitsDefault,
+                PackagingType = product.PackagingType,
+                IsActive = product.IsActive,
+                DefaultUnitPrice = product.DefaultUnitPrice
+            });
+        });
+
+        group.MapPatch("/{id:guid}/active", async (Guid id, AppDbContext db) =>
+        {
+            var product = await db.Products.FirstOrDefaultAsync(x => x.Id == id);
+            if (product is null)
+                return Results.NotFound(new { error = "Produto não encontrado." });
+
+            product.IsActive = !product.IsActive;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new ProductAdminDto
+            {
+                Id = product.Id,
+                InternalCode = product.InternalCode,
+                Sku = product.Sku,
+                Description = product.Description,
+                Unit = product.Unit,
+                WeightKg = product.WeightKg,
+                VolumeM3 = product.VolumeM3,
+                PalletUnitsDefault = product.PalletUnitsDefault,
+                PackagingType = product.PackagingType,
+                IsActive = product.IsActive,
+                DefaultUnitPrice = product.DefaultUnitPrice
+            });
+        });
+
         group.MapGet("/lookup", async (AppDbContext db) =>
         {
             var items = await db.Products

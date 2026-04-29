@@ -207,8 +207,28 @@ public sealed class ApiClient
     public async Task<List<ProductAdminDto>> GetProductsAdminAsync()
     {
         PropagateAuth();
-        var result = await _http.GetFromJsonAsync<List<ProductAdminDto>>("/api/products/admin");
-        return result ?? new();
+
+        var resp = await _http.GetAsync("/api/products/admin");
+        var body = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception($"Erro ao buscar produtos admin: {(int)resp.StatusCode} {resp.ReasonPhrase} | {body}");
+
+        try
+        {
+            var result = JsonSerializer.Deserialize<List<ProductAdminDto>>(
+                body,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            return result ?? new();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Resposta inválida em /api/products/admin. Body: {body}", ex);
+        }
     }
 
     public async Task<ProductAdminDto?> CreateProductAsync(ProductCreateDto dto)
@@ -216,6 +236,43 @@ public sealed class ApiClient
         PropagateAuth();
 
         var resp = await _http.PostAsJsonAsync("/api/products", dto);
+        var body = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception(body);
+
+        return JsonSerializer.Deserialize<ProductAdminDto>(
+            body,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+    }
+
+    public async Task<ProductAdminDto?> UpdateProductAsync(Guid id, ProductUpdateDto dto)
+    {
+        PropagateAuth();
+
+        var resp = await _http.PutAsJsonAsync($"/api/products/{id}", dto);
+        var body = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception(body);
+
+        return JsonSerializer.Deserialize<ProductAdminDto>(
+            body,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+    }
+
+    public async Task<ProductAdminDto?> ToggleProductActiveAsync(Guid id)
+    {
+        PropagateAuth();
+
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/products/{id}/active");
+        var resp = await _http.SendAsync(request);
         var body = await resp.Content.ReadAsStringAsync();
 
         if (!resp.IsSuccessStatusCode)

@@ -5,6 +5,7 @@ using Simulador.App.Modules.Sellers.Endpoints;
 using Simulador.App.Modules.Regional.Endpoints;
 using Simulador.App.Modules.Simulations.Endpoints;
 using Simulador.App.Modules.BillingCompanies.Endpoints;
+using Simulador.App.Modules.Vehicles.Endpoints;
 
 namespace Simulador.App;
 
@@ -19,6 +20,7 @@ public static class EndpointMappings
         app.MapRegionalEndpoints();
         app.MapSimulationEndpoints();
         app.MapBillingCompanyEndpoints();
+        app.MapVehiclesEndpoints();
 
         return app;
     }

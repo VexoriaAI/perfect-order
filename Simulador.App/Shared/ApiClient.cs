@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Simulador.App.Modules.BillingCompanies.DTOs;
+using Simulador.App.Modules.Customers.Dtos;
 using Simulador.App.Modules.Regional.DTO;
 using Simulador.App.Modules.Simulations.Dtos;
 using Simulador.Engine.Contracts;
@@ -143,6 +144,38 @@ public sealed class ApiClient
     {
         PropagateAuth();
         return await _http.GetFromJsonAsync<SimulationHistoryDetailDto>($"/api/simulations/{runId}/history-detail");
+    }
+
+    public async Task<List<CustomerDto>> GetCustomersAdminAsync()
+    {
+        PropagateAuth();
+        var result = await _http.GetFromJsonAsync<List<CustomerDto>>("/api/customers/admin");
+        return result ?? new();
+    }
+
+    public async Task<CustomerDto?> CreateCustomerAsync(CustomerCreateDto dto)
+    {
+        PropagateAuth();
+
+        var resp = await _http.PostAsJsonAsync("/api/customers", dto);
+        var body = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception(body);
+
+        return JsonSerializer.Deserialize<CustomerDto>(
+            body,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+    }
+
+    public async Task<List<VehicleMini>> GetVehiclesAsync()
+    {
+        PropagateAuth();
+        var result = await _http.GetFromJsonAsync<List<VehicleMini>>("/api/vehicles");
+        return result ?? new();
     }
 }
 

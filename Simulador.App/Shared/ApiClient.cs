@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Simulador.App.Modules.BillingCompanies.DTOs;
+using Simulador.App.Modules.Catalog.Dtos;
 using Simulador.App.Modules.Customers.Dtos;
 using Simulador.App.Modules.Regional.DTO;
 using Simulador.App.Modules.Simulations.Dtos;
@@ -176,6 +177,31 @@ public sealed class ApiClient
         PropagateAuth();
         var result = await _http.GetFromJsonAsync<List<VehicleMini>>("/api/vehicles");
         return result ?? new();
+    }
+
+    public async Task<List<PriceAverageDto>> GetPriceAveragesAsync()
+    {
+        PropagateAuth();
+        var result = await _http.GetFromJsonAsync<List<PriceAverageDto>>("/api/price-averages");
+        return result ?? new();
+    }
+
+    public async Task<PriceAverageDto?> UpsertPriceAverageAsync(PriceAverageUpsertDto dto)
+    {
+        PropagateAuth();
+
+        var resp = await _http.PostAsJsonAsync("/api/price-averages", dto);
+        var body = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception(body);
+
+        return JsonSerializer.Deserialize<PriceAverageDto>(
+            body,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
     }
 }
 

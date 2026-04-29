@@ -21,6 +21,7 @@ public static class EndpointMappings
         app.MapSimulationEndpoints();
         app.MapBillingCompanyEndpoints();
         app.MapVehiclesEndpoints();
+        app.MapPriceAverageEndpoints();
 
         return app;
     }

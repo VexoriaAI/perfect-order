@@ -203,6 +203,31 @@ public sealed class ApiClient
                 PropertyNameCaseInsensitive = true
             });
     }
+
+    public async Task<List<ProductAdminDto>> GetProductsAdminAsync()
+    {
+        PropagateAuth();
+        var result = await _http.GetFromJsonAsync<List<ProductAdminDto>>("/api/products/admin");
+        return result ?? new();
+    }
+
+    public async Task<ProductAdminDto?> CreateProductAsync(ProductCreateDto dto)
+    {
+        PropagateAuth();
+
+        var resp = await _http.PostAsJsonAsync("/api/products", dto);
+        var body = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception(body);
+
+        return JsonSerializer.Deserialize<ProductAdminDto>(
+            body,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+    }
 }
 
 // DTOs mínimos só pra UI
